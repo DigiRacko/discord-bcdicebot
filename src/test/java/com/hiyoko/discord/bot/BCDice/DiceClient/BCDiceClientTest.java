@@ -1,5 +1,7 @@
 package com.hiyoko.discord.bot.BCDice.DiceClient;
 
+import org.junit.Test;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,9 +9,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public class BCDiceClientTest extends TestCase {
+public class BCDiceClientTest {
+	@Test
 	public void testIsDiceCommand() {
 		BCDiceClient client = new BCDiceClient("");
 		try (BufferedReader br = Files.newBufferedReader(Paths.get("src/test/resources/shouldRolled.txt"))) {
@@ -26,6 +30,7 @@ public class BCDiceClientTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testDiceSecondary() throws IOException {
 		// Dummy servers
 		String urlA = "http://hiyo-hitsu.sakura.ne.jp/returnCode.cgi?statusCode=500&path=";
@@ -54,6 +59,7 @@ public class BCDiceClientTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testPresecondary() {
 		String urlA = "http://hiyo-hitsu.sakura.ne.jp/returnCode.cgi?statusCode=500&path=";
 		String urlB = "http://hiyo-hitsu.sakura.ne.jp/returnCode.cgi?statusCode=500&a=b&path=";

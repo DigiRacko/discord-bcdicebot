@@ -1,9 +1,12 @@
 package com.hiyoko.discord.bot.BCDice.DiceClient;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class DiceClientFactoryTest extends TestCase {
+import static org.junit.Assert.assertTrue;
 
+public class DiceClientFactoryTest{
+
+	@Test
 	public void testGetDiceClient() {
 		assertTrue(DiceClientFactory.getDiceClient("https://bcdice.herokuapp.com").toString().startsWith("[BCDiceClient]"));
 		assertTrue(DiceClientFactory.getDiceClient("test").toString().startsWith("[DiceClientMock]"));

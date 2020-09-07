@@ -1,31 +1,39 @@
 package com.hiyoko.discord.bot.BCDice;
 
-import java.util.Map;
-import java.lang.reflect.Field;
-import java.io.IOException;
-
 import com.hiyoko.discord.bot.BCDice.dto.DicerollResult;
 import com.hiyoko.discord.bot.BCDice.dto.OriginalDiceBot;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-import junit.framework.TestCase;
+import java.io.IOException;
 
-public class BCDiceCLITest extends TestCase {
+import static org.junit.Assert.*;
+
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore("javax.net.ssl.*")
+@PrepareForTest({RandomStringUtils.class})
+public class BCDiceCLITest{
 
 	private BCDiceCLI cli;
-	private String PASSWORD = "mypassword";
+	private static final String BCDICE_PASSWORD = "BCDICE_PASSWORD";
+	private static final String PASSWORD = "mypassword";
 
-	public BCDiceCLITest(String name) throws ClassNotFoundException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException{
-		super(name);
-	    Class<?> clazz = Class.forName("java.lang.ProcessEnvironment");
-	    Field theCaseInsensitiveEnvironment = clazz.getDeclaredField("theCaseInsensitiveEnvironment");
-	    theCaseInsensitiveEnvironment.setAccessible(true);
-	    @SuppressWarnings("unchecked")
-		Map<String,String> sytemEnviroment = (Map<String, String>) theCaseInsensitiveEnvironment.get(null);
-	    sytemEnviroment.put("BCDICE_PASSWORD", PASSWORD);
-		
+	@Before
+	public void setUp() {
+		// Systemsのmockはうまく働かないため, ランダム生成のパスワードを固定することで対応.
+		PowerMockito.mockStatic(RandomStringUtils.class);
+		PowerMockito.when(RandomStringUtils.randomAscii(Mockito.anyInt())).thenReturn(PASSWORD);
 		cli = new BCDiceCLI("mock");
 	}
-	
+
+	@Test
 	public void testIsRoll() {
 		assertFalse(cli.isRoll("bcdice hiyoko"));
 		assertFalse(cli.isRoll("BCDice hiyoko"));
@@ -35,6 +43,7 @@ public class BCDiceCLITest extends TestCase {
 		assertTrue(cli.isRoll("koneko"));
 	}
 
+	@Test
 	public void testRoll() {
 		try {
 			String system = "kindness";
@@ -46,6 +55,7 @@ public class BCDiceCLITest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testInputStringHelp() {
 		assertEquals(cli.inputs("bcdice help", "", "channel").get(0) , BCDiceCLI.HELP);
 		assertEquals(cli.inputs("bcdice", "", "channel").get(0), BCDiceCLI.HELP);
@@ -66,6 +76,7 @@ public class BCDiceCLITest extends TestCase {
 		assertTrue(cli.inputs("bcdice set hitsuji & hiyoko", "", "hiyohitsu").get(0).contains("hitsuji & hiyoko"));
 	}
 
+	@Test
 	public void testInputStringStack() {
 		String[] list = {"hiyoko", "hiyoko hitsuji", "hiyoko\nhitsuji", "hiyoko hitsuji\nkoneko\nkoinu"};
 		try {
@@ -86,11 +97,13 @@ public class BCDiceCLITest extends TestCase {
 			fail(e.getMessage());
 		}
 	}
-	
+
+	@Test
 	public void testInputStringString() {
 		assertEquals(cli.inputs("bcdice status", "", "channel").get(0), cli.inputs("bcdice status", "koneko", "channel").get(0));
 	}
-	
+
+	@Test
 	public void testMultiChannel() {
 		String[] diceBotList = cli.inputs("bcdice list", "", "channel").get(0).split("\n");
 		cli.inputs("bcdice set " + diceBotList[1], "hiyoko", "no_id");
@@ -103,6 +116,7 @@ public class BCDiceCLITest extends TestCase {
 		assertTrue(cli.inputs("bcdice status", "hiyoko", "dummydummy").get(0).contains(diceBotList[1]));
 	}
 
+	@Test
 	public void testNormalizeCommand() throws IOException {
 		// From https://github.com/Shunshun94/discord-bcdicebot/pull/10#issuecomment-374023404
 		String acctualText = cli.roll("2d6 <= 8 / ああああaaa[~'()&?!]", "nonChannel").getText();
@@ -113,11 +127,13 @@ public class BCDiceCLITest extends TestCase {
 		assertEquals("2d6aa%20a%3Cbb%20b%3Dc%20cc%3Edd%20d%3C%3D%3E%3D%3D%3C%3D%3Edd%20d", cli.roll("2d6aa a < bb b = c cc > dd d <= >=  =< => dd d", "nonChannel").getText());
 	}
 
+	@Test
 	public void testAdmin() {
 		assertTrue(cli.inputs("bcdice admin InvalidPassword help", "", "channel").get(0).contains("パスワードが違います"));
 		assertEquals(cli.inputs("bcdice admin " + PASSWORD + " help", "", "channel").get(0), BCDiceCLI.HELP_ADMIN);
 	}
 
+	@Test
 	public void testSupressionMode() throws IOException {
 		String PREFIX = "/hiyoko";
 		assertTrue(cli.inputs("bcdice admin " + PASSWORD + " suppressroll", "", "channel").get(0).contains("まずコマンドじゃないだろう"));
@@ -181,10 +197,12 @@ public class BCDiceCLITest extends TestCase {
 		assertTrue(cli.inputs("bcdice admin " + PASSWORD + " suppressroll", "", "channel").get(0).contains("まずコマンドじゃないだろう"));
 	}
 
+	@Test
 	public void testOriginalDiceBot() throws IOException {
 		assertTrue(cli.roll("サンプルダイスボット-夜食表", "no_channel").isRolled());
 	}
 
+	@Test
 	public void testMultiroll() throws Exception {
 		assertEquals(cli.rolls("2d6", "no_channel").size(), 1);
 		assertEquals(cli.rolls("3 2d6", "no_channel").size(), 3);
